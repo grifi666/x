@@ -36,7 +36,6 @@
 
     .tabs {
       display: flex;
-      margin: 0;
       width: 100%;
       border: none;
       padding-bottom: 8px;
@@ -66,9 +65,9 @@
 
     .tab-line {
       width: 100vw;
-      height: 1px;
+      height: 2px;
       background-color: #eee;
-      margin-top: 0;
+      margin-top: 8px;
       margin-left: calc(-1 * (100vw - 100%) / 2);
     }
 
@@ -86,7 +85,6 @@
       font-size: 18px;
       background: none;
       cursor: pointer;
-      text-align: center;
     }
 
     .hidden {
@@ -94,18 +92,15 @@
     }
 
     .image-wrapper {
-      width: 320px;
-      height: 220px;
-      margin: 20px auto 0;
-      border-radius: 12px;
-      overflow: hidden;
+      margin-top: 20px;
     }
 
-    .uploaded-image {
+    .image-wrapper img {
       width: 100%;
-      height: 100%;
-      object-fit: cover;
+      height: auto;
       display: block;
+      border: none;
+      border-radius: 0;
     }
 
     .content {
@@ -202,22 +197,25 @@
     <div class="tab" onclick="showTab('info')">Реквизиты</div>
   </div>
 
+  <!-- Gray line under tabs -->
   <div class="tab-line"></div>
 
-  <!-- Upload button -->
+  <!-- Upload -->
   <div class="upload-container" id="uploadBlock">
     <label for="fileInput" class="upload-btn">Загрузить</label>
     <input id="fileInput" type="file" accept="image/*" class="hidden" onchange="handleUpload(this)">
   </div>
 
-  <!-- Uploaded image container -->
-  <div id="imageContainer" class="image-wrapper hidden">
-    <img id="uploadedImage" class="uploaded-image">
+  <!-- Image -->
+  <div class="image-wrapper hidden" id="imageWrapper">
+    <img id="uploadedImage" src="" alt="Загруженный документ">
   </div>
 
   <!-- Content -->
   <div class="content">
-    <div id="tab-doc" class="tab-content"></div>
+    <div id="tab-doc" class="tab-content">
+      <!-- Динамически вставленное изображение будет отображаться выше -->
+    </div>
 
     <div id="tab-info" class="tab-content hidden">
       <ul class="field-list">
@@ -249,20 +247,20 @@
       document.querySelectorAll('.tab-content').forEach(content => content.classList.add('hidden'));
 
       const uploadBlock = document.getElementById('uploadBlock');
-      const imageContainer = document.getElementById('imageContainer');
+      const imageWrapper = document.getElementById('imageWrapper');
 
       if (name === 'doc') {
         document.querySelector('.tab:first-child').classList.add('active');
         document.getElementById('tab-doc').classList.remove('hidden');
-        if (!document.getElementById('uploadedImage').src) {
+        if (!imageWrapper.classList.contains('hidden')) {
+          uploadBlock.classList.add('hidden');
+        } else {
           uploadBlock.classList.remove('hidden');
         }
-        imageContainer.classList.remove('hidden');
       } else {
         document.querySelector('.tab:last-child').classList.add('active');
         document.getElementById('tab-info').classList.remove('hidden');
         uploadBlock.classList.add('hidden');
-        imageContainer.classList.add('hidden');
       }
     }
 
@@ -273,7 +271,7 @@
         reader.onload = function (e) {
           const img = document.getElementById('uploadedImage');
           img.src = e.target.result;
-          document.getElementById('imageContainer').classList.remove('hidden');
+          document.getElementById('imageWrapper').classList.remove('hidden');
           document.getElementById('uploadBlock').classList.add('hidden');
         };
         reader.readAsDataURL(file);
