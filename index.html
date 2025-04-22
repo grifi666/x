@@ -68,7 +68,7 @@
       color: #fff;
     }
 
-     .tab-line {
+    .tab-line {
       width: 100vw;
       height: 2px;
       background-color: #eee;
@@ -99,10 +99,16 @@
     .image-wrapper {
       margin-top: 15px;
       padding: 0 16px;
-      marign-bottom: 40px;
     }
 
-    .image-wrapper img {
+    .zoom-container {
+      overflow: hidden;
+      touch-action: none;
+    }
+
+    .zoom-container img {
+      transition: transform 0.2s ease;
+      transform-origin: center center;
       width: 100%;
       height: auto;
       display: block;
@@ -214,14 +220,14 @@
 
   <!-- Image -->
   <div class="image-wrapper hidden" id="imageWrapper">
-    <img id="uploadedImage" src="" alt="Загруженный документ">
+    <div class="zoom-container" id="zoomContainer">
+      <img id="uploadedImage" src="" alt="Загруженный документ">
+    </div>
   </div>
 
   <!-- Content -->
   <div class="content">
-    <div id="tab-doc" class="tab-content">
-      <!-- Здесь отображается только изображение -->
-    </div>
+    <div id="tab-doc" class="tab-content"></div>
 
     <div id="tab-info" class="tab-content hidden">
       <ul class="field-list">
@@ -260,7 +266,7 @@
       if (name === 'doc') {
         tabs[0].classList.add('active');
         document.getElementById('tab-doc').classList.remove('hidden');
-        if (imageWrapper.querySelector('img').src) {
+        if (document.getElementById('uploadedImage').src) {
           imageWrapper.classList.remove('hidden');
           uploadBlock.classList.add('hidden');
         } else {
@@ -284,9 +290,55 @@
           img.src = e.target.result;
           document.getElementById('imageWrapper').classList.remove('hidden');
           document.getElementById('uploadBlock').classList.add('hidden');
+          scale = 1;
+          updateZoom();
         };
         reader.readAsDataURL(file);
       }
+    }
+
+    // Зум
+    let scale = 1;
+    const img = document.getElementById('uploadedImage');
+    const zoomContainer = document.getElementById('zoomContainer');
+
+    function updateZoom() {
+      img.style.transform = `scale(${scale})`;
+    }
+
+    zoomContainer?.addEventListener('wheel', function (e) {
+      e.preventDefault();
+      scale += e.deltaY * -0.001;
+      scale = Math.min(Math.max(1, scale), 4); // ограничим от 1x до 4x
+      updateZoom();
+    }, { passive: false });
+
+    let startDist = 0;
+
+    zoomContainer?.addEventListener('touchstart', function (e) {
+      if (e.touches.length === 2) {
+        startDist = getDistance(e.touches[0], e.touches[1]);
+      }
+    });
+
+    zoomContainer?.addEventListener('touchmove', function (e) {
+      if (e.touches.length === 2) {
+        e.preventDefault();
+        const currentDist = getDistance(e.touches[0], e.touches[1]);
+        if (startDist > 0) {
+          const delta = currentDist - startDist;
+          scale += delta * 0.005;
+          scale = Math.min(Math.max(1, scale), 4);
+          updateZoom();
+          startDist = currentDist;
+        }
+      }
+    }, { passive: false });
+
+    function getDistance(touch1, touch2) {
+      const dx = touch2.clientX - touch1.clientX;
+      const dy = touch2.clientY - touch1.clientY;
+      return Math.sqrt(dx * dx + dy * dy);
     }
   </script>
 
